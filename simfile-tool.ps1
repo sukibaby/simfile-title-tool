@@ -30,7 +30,7 @@ function Get-Directory {
 }
 
 function Draw-Separator {
-      Write-Host ""
+  Write-Host ""
   Write-Host "--------------------------------------------------"
   Write-Host ""
 }
@@ -281,56 +281,56 @@ Write-Host "step artist, and credit fields here."
 Write-Host ""
 $wannaModify = Read-Host -Prompt 'Would you like to modify any of these values? (yes/no, default is no)'
 if ($wannaModify -eq 'yes') {
-Write-Host ""
-$addBanner = Read-Host -Prompt 'Would you like to add a banner to all files? (yes/no, default is no)'
-if ($addBanner -eq 'yes') {
-  $bannerPrompt = Read-Host -Prompt 'Enter the banner file name, including extension'
-  $operations += @{ Pattern = '^#BANNER:.*'; Replacement = "#BANNER: $bannerPrompt" }
-}
-
-Write-Host ""
-$addCDTitle = Read-Host -Prompt 'Would you like to add a CD title to all files? (yes/no, default is no)'
-if ($addCDTitle -eq 'yes') {
-  $CDTitlePrompt = Read-Host -Prompt 'Enter the CD title file name, including extension'
-  $operations += @{ Pattern = '^#CDTITLE:.*'; Replacement = "#CDTITLE: $CDTitlePrompt" }
-}
-
-Write-Host ""
-$addBG = Read-Host -Prompt 'Would you like to add a background to all files? (yes/no, default is no)'
-if ($addBG -eq 'yes') {
-  $BGPrompt = Read-Host -Prompt 'Enter the background file name, including extension'
-  $operations += @{ Pattern = '^#BACKGROUND:.*'; Replacement = "#BACKGROUND: $BGPrompt" }
-}
-
-Write-Host ""
-$setStepArtist = Read-Host -Prompt 'Would you like to set something for the step artist field? This is the per-chart credit. (yes/no, default is no)'
-if ($setStepArtist -eq 'yes') {
-  $stepArtist = Read-Host -Prompt 'Enter the credit value'
-  <# To-do: add more chart types below (pump, smx, etc) #>
-  $danceTypes = @("dance-single","dance-double","dance-couple","dance-solo")
-  foreach ($danceType in $danceTypes) {
-    $operations += @{ Pattern = "//--------------- $danceType - (.*?) ----------------"; Replacement = "//--------------- $danceType - $stepArtist ----------------" }
+  Write-Host ""
+  $addBanner = Read-Host -Prompt 'Would you like to add a banner to all files? (yes/no, default is no)'
+  if ($addBanner -eq 'yes') {
+    $bannerPrompt = Read-Host -Prompt 'Enter the banner file name, including extension'
+    $operations += @{ Pattern = '^#BANNER:.*'; Replacement = "#BANNER: $bannerPrompt" }
   }
-}
 
-Write-Host ""
-$setCredit = Read-Host -Prompt 'Would you like to set something for the credit field? (This is the #CREDIT field for the simfile, not the per-chart "Step artist" field.) (yes/no, default is no)'
-if ($setCredit -eq 'yes') {
-  $creditValue = Read-Host -Prompt 'Enter the credit value'
-  $operations += @{ Pattern = '^#CREDIT:.*'; Replacement = "#CREDIT: $creditValue" }
-}
-
-$files = Get-Files -dir $directoryToUse -Recurse $recurse
-$confirmation = Read-Host "Are you sure you want to apply changes? (yes/no, default is no)"
-Write-Host ""
-if ($confirmation -eq "yes") {
-  foreach ($file in $files) {
-    Write-Host "Applying changes to file: $($file.FullName)"
-    Update-File -File $file -operations $operations
+  Write-Host ""
+  $addCDTitle = Read-Host -Prompt 'Would you like to add a CD title to all files? (yes/no, default is no)'
+  if ($addCDTitle -eq 'yes') {
+    $CDTitlePrompt = Read-Host -Prompt 'Enter the CD title file name, including extension'
+    $operations += @{ Pattern = '^#CDTITLE:.*'; Replacement = "#CDTITLE: $CDTitlePrompt" }
   }
-} else {
-  Write-Host "No changes were made."
-}
+
+  Write-Host ""
+  $addBG = Read-Host -Prompt 'Would you like to add a background to all files? (yes/no, default is no)'
+  if ($addBG -eq 'yes') {
+    $BGPrompt = Read-Host -Prompt 'Enter the background file name, including extension'
+    $operations += @{ Pattern = '^#BACKGROUND:.*'; Replacement = "#BACKGROUND: $BGPrompt" }
+  }
+
+  Write-Host ""
+  $setStepArtist = Read-Host -Prompt 'Would you like to set something for the step artist field? This is the per-chart credit. (yes/no, default is no)'
+  if ($setStepArtist -eq 'yes') {
+    $stepArtist = Read-Host -Prompt 'Enter the credit value'
+    <# To-do: add more chart types below (pump, smx, etc) #>
+    $danceTypes = @("dance-single","dance-double","dance-couple","dance-solo")
+    foreach ($danceType in $danceTypes) {
+      $operations += @{ Pattern = "//--------------- $danceType - (.*?) ----------------"; Replacement = "//--------------- $danceType - $stepArtist ----------------" }
+    }
+  }
+
+  Write-Host ""
+  $setCredit = Read-Host -Prompt 'Would you like to set something for the credit field? (This is the #CREDIT field for the simfile, not the per-chart "Step artist" field.) (yes/no, default is no)'
+  if ($setCredit -eq 'yes') {
+    $creditValue = Read-Host -Prompt 'Enter the credit value'
+    $operations += @{ Pattern = '^#CREDIT:.*'; Replacement = "#CREDIT: $creditValue" }
+  }
+
+  $files = Get-Files -dir $directoryToUse -Recurse $recurse
+  $confirmation = Read-Host "Are you sure you want to apply changes? (yes/no, default is no)"
+  Write-Host ""
+  if ($confirmation -eq "yes") {
+    foreach ($file in $files) {
+      Write-Host "Applying changes to file: $($file.FullName)"
+      Update-File -File $file -operations $operations
+    }
+  } else {
+    Write-Host "No changes were made."
+  }
 }
 #endregion
 
