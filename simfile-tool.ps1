@@ -1,4 +1,4 @@
-param(
+﻿param(
   [Parameter(Position = 0)]
   [string]$directoryToUse,
   [switch]$discord
@@ -27,6 +27,12 @@ function Get-Directory {
     }
   }
   return $dir
+}
+
+function Draw-Separator {
+      Write-Host ""
+  Write-Host "--------------------------------------------------"
+  Write-Host ""
 }
 
 function Get-Files {
@@ -96,40 +102,34 @@ function Update-Offset {
   param($dir,$rec)
   $files = Get-Files -dir $dir -rec $rec
   $operation = Read-Host "Do you want to add or subtract the 9ms ITG offset? (add/subtract/no)"
-  if ($operation -eq "add") {
-    $adjustment = 0.009
-  } elseif ($operation -eq "subtract") {
-    $adjustment = -0.009
-  } elseif ($operation -eq "no") {
-    Write-Host "No adjustment will be made."
-    return
-  } else {
-    Write-Host "Assuming 'no', so no adjustment will be made."
-    return
-  }
-  if ($operation -eq "add" -or $operation -eq "subtract") {
-    foreach ($file in $files) {
-      $content = Get-Content -LiteralPath $file.FullName
-      $found = $false
-      $content = $content | ForEach-Object {
-        if (!$found -and ($_ -match "#OFFSET")) {
-          $parts = $_ -split ':'
-          $semicolon = $parts[1].EndsWith(';')
-          $parts[1] = $parts[1].TrimEnd(';')
-          $parts[1] = [double]$parts[1] + $adjustment
-          if ($semicolon) {
-            $parts[1] = $parts[1].ToString() + ';'
-          }
-          $found = $true
-          return ($parts -join ':')
-        }
-        return $_
-      }
-      Set-Content -Path $file.FullName -Value $content
+  $adjustment = switch ($operation) {
+    "add" { 0.009 }
+    "subtract" { -0.009 }
+    default {
+      Write-Host "No adjustment will be made."
+      return
     }
-    Write-Host "Adjustment performed."
-  } else {
-    Write-Host "No adjustment will be made."
+  }
+  foreach ($file in $files) {
+    $content = Get-Content -LiteralPath $file.FullName
+    $found = $false
+    $content = $content | ForEach-Object {
+      if (!$found -and ($_ -match "#OFFSET")) {
+        $parts = $_ -split ':'
+        $semicolon = $parts[1].EndsWith(';')
+        $parts[1] = $parts[1].TrimEnd(';')
+        $oldOffset = $parts[1]
+        $parts[1] = [double]$parts[1] + $adjustment
+        if ($semicolon) {
+          $parts[1] = $parts[1].ToString() + ';'
+        }
+        $found = $true
+        Write-Host "Changed offset in $($file.FullName) from $oldOffset to $($parts[1])"
+        return ($parts -join ':')
+      }
+      return $_
+    }
+    Set-Content -Path $file.FullName -Value $content
   }
 }
 
@@ -195,6 +195,7 @@ if ($showFiles -ne 'no') {
 Write-Host ""
 
 Check-FilePaths -dir $directoryToUse
+Draw-Separator
 #endregion
 
 #region user input - unicode check
@@ -225,6 +226,7 @@ if ($userInput -eq 'yes') {
     $nonCompliantFiles
   }
 } else {}
+Draw-Separator
 #endregion
 
 #region user input - capitalization
@@ -264,18 +266,21 @@ if ($wannaCapitalize -eq 'yes') {
     Update-Capitalization -dir $directoryToUse -rec $recurse -field "ARTIST" -switch $switch
   }
 }
+Draw-Separator
 #endregion
-
-#region user input - prompts to change values
 Update-Offset -dir $directoryToUse -rec $recurse
-
+Draw-Separator
+#region user input - prompts to change values
 $operations = @()
 
 Write-Host ""
 Write-Host "The following section changes the text values inside the simfile. It won't move any files."
 Write-Host "For example, if you plan to have a banner called 'banner.png' in all your song directories,"
-Write-Host "you would enter banner.png when prompted."
-
+Write-Host "you would enter banner.png when prompted. You can change the banner, CD title, background,"
+Write-Host "step artist, and credit fields here."
+Write-Host ""
+$wannaModify = Read-Host -Prompt 'Would you like to modify any of these values? (yes/no, default is no)'
+if ($wannaModify -eq 'yes') {
 Write-Host ""
 $addBanner = Read-Host -Prompt 'Would you like to add a banner to all files? (yes/no, default is no)'
 if ($addBanner -eq 'yes') {
@@ -323,9 +328,9 @@ if ($confirmation -eq "yes") {
     Write-Host "Applying changes to file: $($file.FullName)"
     Update-File -File $file -operations $operations
   }
-  Write-Host "All done!"
 } else {
   Write-Host "No changes were made."
+}
 }
 #endregion
 
@@ -341,8 +346,10 @@ if ($discord) {
   if ($confirm -eq 'yes') {
     Discordifier -dir $directoryToUse -rec $recurse
   } else {
-    Write-Host "All done!"
     Write-Host ""
   }
 }
 #endregion
+
+Draw-Separator
+Write-Host "All done :)"
