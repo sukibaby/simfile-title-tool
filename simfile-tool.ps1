@@ -167,6 +167,20 @@ function Check-FilePaths {
   }
 }
 
+function Update-Field-Capitalization {
+  param($dir,$rec,$field)
+  Write-Host ""
+  $changeField = Read-Host -Prompt "Would you like to change the $field field capitalization? (yes/no, default is no)"
+  if ($changeField -eq 'yes') {
+    $switch = Read-Host -Prompt "Please enter one of the following switches: u (uppercase), t (title case), l (lower case)"
+    if ($switch -notin @("u","t","l")) {
+      Write-Error "Invalid switch: $switch. Please provide one of the following switches: u (uppercase), t (title case), l (lower case)"
+      return
+    }
+    Update-Capitalization -dir $dir -rec $rec -field $field -switch $switch
+  }
+}
+
 $directoryToUse = Get-Directory -dir $directoryToUse
 if ($null -eq $directoryToUse) {
   return
@@ -232,39 +246,9 @@ Draw-Separator
 #region user input - capitalization
 $wannaCapitalize = Read-Host -Prompt 'Would you like to standardize capitalization? (yes/no, default is no)'
 if ($wannaCapitalize -eq 'yes') {
-
-  Write-Host ""
-  $changeTitle = Read-Host -Prompt 'Would you like to change the title field capitalization? (yes/no, default is no)'
-  if ($changeTitle -eq 'yes') {
-    $switch = Read-Host -Prompt "Please enter one of the following switches: u (uppercase), t (title case), l (lower case)"
-    if ($switch -notin @("u","t","l")) {
-      Write-Error "Invalid switch: $switch. Please provide one of the following switches: u (uppercase), t (title case), l (lower case)"
-      return
-    }
-    Update-Capitalization -dir $directoryToUse -rec $recurse -field "TITLE" -switch $switch
-  }
-
-  Write-Host ""
-  $changeSubtitle = Read-Host -Prompt 'Would you like to change the subtitle field capitalization? (yes/no, default is no)'
-  if ($changeSubtitle -eq 'yes') {
-    $switch = Read-Host -Prompt "Please enter one of the following switches: u (uppercase), t (title case), l (lower case)"
-    if ($switch -notin @("u","t","l")) {
-      Write-Error "Invalid switch: $switch. Please provide one of the following switches: u (uppercase), t (title case), l (lower case)"
-      return
-    }
-    Update-Capitalization -dir $directoryToUse -rec $recurse -field "SUBTITLE" -switch $switch
-  }
-
-  Write-Host ""
-  $changeArtist = Read-Host -Prompt 'Would you like to change the artist field capitalization? (yes/no, default is no)'
-  if ($changeArtist -eq 'yes') {
-    $switch = Read-Host -Prompt "Please enter one of the following switches: u (uppercase), t (title case), l (lower case)"
-    if ($switch -notin @("u","t","l")) {
-      Write-Error "Invalid switch: $switch. Please provide one of the following switches: u (uppercase), t (title case), l (lower case)"
-      return
-    }
-    Update-Capitalization -dir $directoryToUse -rec $recurse -field "ARTIST" -switch $switch
-  }
+  Update-Field-Capitalization -dir $directoryToUse -rec $recurse -field "TITLE"
+  Update-Field-Capitalization -dir $directoryToUse -rec $recurse -field "SUBTITLE"
+  Update-Field-Capitalization -dir $directoryToUse -rec $recurse -field "ARTIST"
 }
 Draw-Separator
 #endregion
