@@ -143,7 +143,6 @@ function Update-File {
       if ($content[$i] -match $operation.Pattern) {
         Write-Host "Replacing '$($content[$i])' with '$($operation.Replacement)'"
         $content[$i] = $content[$i] -replace $operation.Pattern,$operation.Replacement
-        break
       }
     }
   }
@@ -298,21 +297,21 @@ if ($wannaModify -eq 'yes') {
   $addBanner = Read-Host -Prompt 'Would you like to add a banner to all files? (yes/no, default is no)'
   if ($addBanner -eq 'yes') {
     $bannerPrompt = Read-Host -Prompt 'Enter the banner file name, including extension'
-    $operations += @{ Pattern = '^#BANNER:.*'; Replacement = "#BANNER: $bannerPrompt" }
+    $operations += @{ Pattern = '^#BANNER:.*'; Replacement = "#BANNER:$bannerPrompt" }
   }
 
   Write-Host ""
   $addCDTitle = Read-Host -Prompt 'Would you like to add a CD title to all files? (yes/no, default is no)'
   if ($addCDTitle -eq 'yes') {
     $CDTitlePrompt = Read-Host -Prompt 'Enter the CD title file name, including extension'
-    $operations += @{ Pattern = '^#CDTITLE:.*'; Replacement = "#CDTITLE: $CDTitlePrompt" }
+    $operations += @{ Pattern = '^#CDTITLE:.*'; Replacement = "#CDTITLE:$CDTitlePrompt" }
   }
 
   Write-Host ""
   $addBG = Read-Host -Prompt 'Would you like to add a background to all files? (yes/no, default is no)'
   if ($addBG -eq 'yes') {
     $BGPrompt = Read-Host -Prompt 'Enter the background file name, including extension'
-    $operations += @{ Pattern = '^#BACKGROUND:.*'; Replacement = "#BACKGROUND: $BGPrompt" }
+    $operations += @{ Pattern = '^#BACKGROUND:.*'; Replacement = "#BACKGROUND:$BGPrompt" }
   }
 
   Write-Host ""
@@ -330,7 +329,7 @@ if ($wannaModify -eq 'yes') {
   $setCredit = Read-Host -Prompt 'Would you like to set something for the credit field? (This is the #CREDIT field for the simfile, not the per-chart "Step artist" field.) (yes/no, default is no)'
   if ($setCredit -eq 'yes') {
     $creditValue = Read-Host -Prompt 'Enter the credit value'
-    $operations += @{ Pattern = '^#CREDIT:.*'; Replacement = "#CREDIT: $creditValue" }
+    $operations += @{ Pattern = '^#CREDIT:.*'; Replacement = "#CREDIT:$creditValue" }
   }
 
   $files = Get-Files -dir $directoryToUse -Recurse $recurse
