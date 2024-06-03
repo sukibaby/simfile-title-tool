@@ -8,7 +8,7 @@ if ($null -ne $directoryToUse) {
   $directoryToUse = $directoryToUse.Replace("`"","'")
 }
 
-Write-Host "Simfile Tool (5/31/2024) by sukibaby :)"
+Write-Host "Simfile Tool (6/3/2024) by sukibaby :)"
 Write-Host "Check for new versions at:"
 Write-Host "https://github.com/sukibaby/simfile-tool"
 Write-Host ""
@@ -181,6 +181,33 @@ function Update-Field-Capitalization {
   }
 }
 
+function Remove-OldFiles {
+    param ($dir)
+    if (!(Test-Path -Path $dir)) {
+        Write-Host "The directory `"$dir`" does not exist."
+        return
+    }
+    $oldFiles = Get-ChildItem -Path $dir -Recurse -Filter "*.old"
+    if ($oldFiles) {
+        Write-Host "The following .old files were found:"
+        foreach ($file in $oldFiles) {
+            Write-Host "`"$($file.FullName)`""
+        }
+        $message = "Do you want to remove all of the above files? (yes/no, default is no)"
+        $response = Read-Host -Prompt $message
+        if ($response -eq 'yes') {
+            foreach ($file in $oldFiles) {
+                Remove-Item -Path $file.FullName
+            }
+            Write-Host "All .old files have been removed."
+        } else {
+            Write-Host "No files were removed."
+        }
+    } else {
+        Write-Host "No .old files found in `"$dir`"."
+    }
+}
+
 $directoryToUse = Get-Directory -dir $directoryToUse
 if ($null -eq $directoryToUse) {
   return
@@ -252,8 +279,10 @@ if ($wannaCapitalize -eq 'yes') {
 }
 Draw-Separator
 #endregion
+
 Update-Offset -dir $directoryToUse -rec $recurse
 Draw-Separator
+
 #region user input - prompts to change values
 $operations = @()
 
@@ -316,6 +345,16 @@ if ($wannaModify -eq 'yes') {
     Write-Host "No changes were made."
   }
 }
+Draw-Separator
+#endregion
+
+#region user input - remove .old Files
+  $confirm = Read-Host -Prompt 'Would you like to check for .old files and remove them if found? (yes/no, default is no)'
+  if ($confirm -eq 'yes') {
+    Remove-OldFiles -dir $directoryToUse -rec $recurse
+  } else {
+    Write-Host ""
+  }
 #endregion
 
 #region user input - discord filename fixer
