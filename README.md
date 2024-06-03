@@ -7,6 +7,7 @@ With this program, you can:
 - Apply a consistent capitalization scheme to all title, subtitle, or artist fields
 - Apply or remove the ITG 9ms offset
 - Apply a value to the banner, CD title, background, step artist, or credit fields of the simfile
+- Check for .old files, and remove them if desired.
 - If you want to update a simfile to use underscores instead of spaces in the file name, update the information in the simfile accordingly.
 
 You can run the script directly like so:
