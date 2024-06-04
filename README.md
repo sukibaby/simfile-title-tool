@@ -1,6 +1,8 @@
 # simfile-tool
 Easily manage all your simfiles/stepcharts. Compatible with `.sm` and `.ssc` formats, and works fine with very large directories containing thousands of simfiles. You can run it as a PowerShell script, or download a pre-compiled exe in the "Releases" section.
 
+## Please note the code is still in very early stages and is being updated frequently. At this time, known problems are that non-Unicode characters may get broken when using the auto capitalization feature.
+
 With this program, you can:
 - Use the directory you're in, or all subdirectories too (change your entire Songs folder at once, if you want)
 - Check for characters which may not work in all versions of StepMania
