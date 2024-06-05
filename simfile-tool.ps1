@@ -160,9 +160,9 @@ function Update-Offset {
 }
 
 function Update-File {
-  param($file,$operationsPTCV)
+  param($file,$updateFileArray)
   $content = Get-Content -LiteralPath $file.FullName
-  foreach ($operation in $operationsPTCV) {
+  foreach ($operation in $updateFileArray) {
     for ($i = 0; $i -lt $content.Length; $i++) {
       if ($content[$i] -match $operation.Pattern) {
         Write-Host "Replacing '$($content[$i])' with '$($operation.Replacement)'"
@@ -301,8 +301,8 @@ Draw-Separator
 Update-Offset -dir $directoryToUse -rec $recurse
 Draw-Separator
 
-#region USER INPUT SUBREGION PROMPTS TO REMOVE OLD FILES
-$operationsPTCV = @()
+#region USER INPUT SUBREGION CHANGE FILENAME/STEP ARTIST VALUES
+$updateFileArray = @()
 
 Write-Host ""
 Write-Host "The following section changes the text values inside the simfile. It won't move any files."
@@ -315,19 +315,19 @@ if ($modifyValuesConfirm -eq 'yes') {
   $addBannerConfirm = Read-Host -Prompt 'Would you like to add a banner to all files? (yes/no, default is no)'
   if ($addBannerConfirm -eq 'yes') {
     $bannerFileName = Read-Host -Prompt 'Enter the banner file name, including extension'
-    $operationsPTCV += @{ Pattern = '^#BANNER:.*'; Replacement = "#BANNER:$bannerFileName" }
+    $updateFileArray += @{ Pattern = '^#BANNER:.*'; Replacement = "#BANNER:$bannerFileName" }
   }
 
   $addCDTitleConfirm = Read-Host -Prompt 'Would you like to add a CD title to all files? (yes/no, default is no)'
   if ($addCDTitleConfirm -eq 'yes') {
     $cdTitleFileName = Read-Host -Prompt 'Enter the CD title file name, including extension'
-    $operationsPTCV += @{ Pattern = '^#CDTITLE:.*'; Replacement = "#CDTITLE:$cdTitleFileName" }
+    $updateFileArray += @{ Pattern = '^#CDTITLE:.*'; Replacement = "#CDTITLE:$cdTitleFileName" }
   }
 
   $addBGConfirm = Read-Host -Prompt 'Would you like to add a background to all files? (yes/no, default is no)'
   if ($addBGConfirm -eq 'yes') {
     $bgFileName = Read-Host -Prompt 'Enter the background file name, including extension'
-    $operationsPTCV += @{ Pattern = '^#BACKGROUND:.*'; Replacement = "#BACKGROUND:$bgFileName" }
+    $updateFileArray += @{ Pattern = '^#BACKGROUND:.*'; Replacement = "#BACKGROUND:$bgFileName" }
   }
 
   $setStepArtistConfirm = Read-Host -Prompt 'Would you like to set something for the step artist field? This is the per-chart credit. (yes/no, default is no)'
@@ -335,14 +335,14 @@ if ($modifyValuesConfirm -eq 'yes') {
     $stepArtistCredit = Read-Host -Prompt 'Enter the credit value'
     $danceTypes = @("dance-single","dance-double","dance-couple","dance-solo")
     foreach ($danceType in $danceTypes) {
-      $operationsPTCV += @{ Pattern = "//--------------- $danceType - (.*?) ----------------"; Replacement = "//--------------- $danceType - $stepArtistCredit ----------------" }
+      $updateFileArray += @{ Pattern = "//--------------- $danceType - (.*?) ----------------"; Replacement = "//--------------- $danceType - $stepArtistCredit ----------------" }
     }
   }
 
   $setCreditConfirm = Read-Host -Prompt 'Would you like to set something for the credit field? (This is the #CREDIT field for the simfile, not the per-chart "Step artist" field.) (yes/no, default is no)'
   if ($setCreditConfirm -eq 'yes') {
     $creditValue = Read-Host -Prompt 'Enter the credit value'
-    $operationsPTCV += @{ Pattern = '^#CREDIT:.*'; Replacement = "#CREDIT:$creditValue" }
+    $updateFileArray += @{ Pattern = '^#CREDIT:.*'; Replacement = "#CREDIT:$creditValue" }
   }
 
   $filesToModify = Get-Files -dir $directoryToUse -Recurse $recurse
@@ -350,7 +350,7 @@ if ($modifyValuesConfirm -eq 'yes') {
   if ($applyChangesConfirm -eq "yes") {
     foreach ($file in $filesToModify) {
       Write-Host "Applying changes to file: $($file.FullName)"
-      Update-File -File $file -operations $operationsPTCV
+      Update-File -File $file -operations $updateFileArray
     }
   } else {
     Write-Host "No changes were made."
