@@ -1,7 +1,5 @@
 
-# sukibaby's Simfile Tool :)
-
-  
+# Simfile tool :)
 
 ### Easily manage all your simfiles/stepcharts. Compatible with `.sm` and `.ssc` formats, and works fine with very large directories containing thousands of simfiles.
 
@@ -23,9 +21,17 @@
 
 - Check for characters which may get removed or replaced during file transfer, and rename files/update values in simfiles accordingly
 
-
-------
+-----
 ### How to use
+### PowerShell is required!
+You can run Simfile Tool directly as a PowerShell script. 
+
+- **Windows**: PowerShell comes pre-installed with Windows
+  - On Windows 11, you need to enable execution of PowerShell scripts to run the .ps1 file. If you don't want to, or can't, an exe file is provided in the Releases section. The exe does not get updated as frequently as the script.
+
+- **Mac**: Mac users can download PowerShell from the Microsoft website or with Homebrew.
+
+- **Linux**: Linux users can refer to their distribution's instructions for the preferred method.
  
  You can run the script directly like so:
 
@@ -41,21 +47,9 @@ or use the pre-built exe file in the Releases section:
 
 `PS C:\Users\Stepper\Documents> .\simfile-tool.exe "C:\Users\Stepper\Documents\StepMania 5\Songs\In The Groove"`
 
------
-
-### PowerShell is required!
-You can run Simfile Tool directly as a PowerShell script. 
-
-- **Windows**: PowerShell comes pre-installed with Windows
-  - On Windows 11, you need to enable execution of PowerShell scripts to run the .ps1 file. If you don't want to, or can't, an exe file is provided in the Releases section. The exe does not get updated as frequently as the script.
-
-- **Mac**: Mac users can download PowerShell from the Microsoft website or with Homebrew.
-
-- **Linux**: Linux users can refer to their distribution's instructions for the preferred method.
-
 ------
 
-*Please note the code is still in early stages and is being updated frequently, so check back for updated versions.*
+*This is an active project, so check back for updated versions.*
 
 **Known problems:**
 
