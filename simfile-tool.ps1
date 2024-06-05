@@ -1,4 +1,4 @@
-﻿param(
+param(
   [Parameter(Position = 0)]
   [string]$directoryToUse
 )
@@ -7,7 +7,7 @@ if ($null -ne $directoryToUse) {
   $directoryToUse = $directoryToUse.Replace("`"","'")
 }
 
-Write-Host "Simfile Tool (6/3/2024) by sukibaby :)"
+Write-Host "Simfile Tool (6/5/2024) by sukibaby :)"
 Write-Host "Check for new versions at:"
 Write-Host "https://github.com/sukibaby/simfile-tool"
 Write-Host ""
@@ -78,6 +78,25 @@ function Update-Capitalization {
       return $_
     }
     Set-Content -Path $file.FullName -Value $content
+  }
+}
+
+function Update-Capitalization-StepArtist {
+  param($StepArtist_dir,$StepArtist_rec)
+  $StepArtist_files = Get-Files -dir $StepArtist_dir -rec $StepArtist_rec
+  foreach ($StepArtist_file in $StepArtist_files) {
+    $StepArtist_content = Get-Content -LiteralPath $StepArtist_file.FullName
+    for ($i = 0; $i -lt $StepArtist_content.Length; $i++) {
+      if ($StepArtist_content[$i] -match "//---------------(dance-.*) - (.*?)----------------") {
+        $matchedGroup = $Matches[2]
+        switch ($global:capitalizationPromptAnswer) {
+          "u" { $StepArtist_content[$i] = $StepArtist_content[$i].Replace($matchedGroup, $matchedGroup.ToUpper()) }
+          "t" { $StepArtist_content[$i] = $StepArtist_content[$i].Replace($matchedGroup, (Get-Culture).TextInfo.ToTitleCase($matchedGroup.ToLower())) }
+          "l" { $StepArtist_content[$i] = $StepArtist_content[$i].Replace($matchedGroup, $matchedGroup.ToLower()) }
+        }
+      }
+    }
+    Set-Content -Path $StepArtist_file.FullName -Value $StepArtist_content
   }
 }
 
@@ -261,8 +280,7 @@ if ($wannaCapitalize -eq 'yes') {
   Update-Field-Capitalization -dir $directoryToUse -rec $recurse -field "TITLE"
   Update-Field-Capitalization -dir $directoryToUse -rec $recurse -field "SUBTITLE"
   Update-Field-Capitalization -dir $directoryToUse -rec $recurse -field "ARTIST"
-  # not working yet
-  #Update-Field-Capitalization -dir $directoryToUse -rec $recurse -field "STEPARTIST"
+  Update-Field-Capitalization -dir $directoryToUse -rec $recurse -field "STEPARTIST"
 }
 
 Draw-Separator
