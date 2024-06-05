@@ -9,17 +9,17 @@
 
 ### With this program, you can:
 
-- Use the directory you're in, or all sub-directories too
+- Choose whether to use the directory you're in, or all sub-directories as well
 
 - Check for characters which may not work in all versions of StepMania (in other words, check for non-`IEC 8859-1` characters)
 
-- Apply a consistent capitalization scheme to all title, subtitle, or artist fields
+- Apply a consistent capitalization scheme to all title, subtitle, artist, or step artist fields
 
 - Apply or remove the ITG 9ms offset
 
-- Apply a value to the banner, CD title, background, step artist, or credit fields of the simfile
+- Apply a consistent value to the banner, CD title, background, credit, or step artist fields of the simfile (for example, if you plan to have a banner called 'banner.png' in all your song directories, you can easily set that in all your simfiles at once).
 
-- Check for .old files, and remove them in bulk.
+- Check for .old files and remove them in bulk.
 
 
 ------
