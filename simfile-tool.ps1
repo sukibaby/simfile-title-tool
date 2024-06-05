@@ -166,7 +166,7 @@ function Update-File {
     for ($i = 0; $i -lt $content.Length; $i++) {
       if ($content[$i] -match $operation.Pattern) {
         Write-Host "Replacing '$($content[$i])' with '$($operation.Replacement)'"
-        $content[$i] = $content[$i] -replace $operation.Pattern,$operation.Replacement
+        $content[$i] = $content[$i] -replace $operation.Pattern, $operation.Replacement
       }
     }
   }
@@ -246,6 +246,7 @@ function Prepare-For-Filesharing {
     try {
       Rename-Item -LiteralPath $file.FullName -NewName $newFileName -ErrorAction Stop
       $renamedFiles[$file.FullName] = Join-Path $file.Directory $newFileName
+      Write-Host "Renamed file '$($file.FullName)' to '$newFileName'"
     } catch {
       Write-Warning "Failed to rename file '$($file.FullName)' to '$newFileName'. Error: $_"
       Write-Warning "Values in the simfile will not be changed."
@@ -357,7 +358,6 @@ Draw-Separator
 $operations = @()
 
 $wannaMessage = @"
-                                                                 
   The following section changes the text values inside the   
   simfile. It won't move any files.                          
   For example, if you plan to have a banner called           
@@ -374,21 +374,21 @@ if ($wannaModify -eq 'yes') {
   $addBanner = Read-Host -Prompt 'Would you like to add a banner to all files? (yes/no, default is no)'
   if ($addBanner -eq 'yes') {
     $bannerPrompt = Read-Host -Prompt 'Enter the banner file name, including extension'
-    $operations += @{ Pattern = '^#BANNER:.*'; Replacement = "#BANNER:$bannerPrompt;" }
+    $operations += @{ Pattern = '^#BANNER:.*?;'; Replacement = "#BANNER:$bannerPrompt;" }
   }
 
   Write-Host ""
   $addCDTitle = Read-Host -Prompt 'Would you like to add a CD title to all files? (yes/no, default is no)'
   if ($addCDTitle -eq 'yes') {
     $CDTitlePrompt = Read-Host -Prompt 'Enter the CD title file name, including extension'
-    $operations += @{ Pattern = '^#CDTITLE:.*'; Replacement = "#CDTITLE:$CDTitlePrompt;" }
+    $operations += @{ Pattern = '^#CDTITLE:.*?;'; Replacement = "#CDTITLE:$CDTitlePrompt;" }
   }
 
   Write-Host ""
   $addBG = Read-Host -Prompt 'Would you like to add a background to all files? (yes/no, default is no)'
   if ($addBG -eq 'yes') {
     $BGPrompt = Read-Host -Prompt 'Enter the background file name, including extension'
-    $operations += @{ Pattern = '^#BACKGROUND:.*'; Replacement = "#BACKGROUND:$BGPrompt;" }
+    $operations += @{ Pattern = '^#BACKGROUND:.*?;'; Replacement = "#BACKGROUND:$BGPrompt;" }
   }
 
   Write-Host ""
@@ -406,7 +406,7 @@ if ($wannaModify -eq 'yes') {
   $setCredit = Read-Host -Prompt 'Would you like to set something for the credit field? (This is the #CREDIT field for the simfile, not the per-chart "Step artist" field.) (yes/no, default is no)'
   if ($setCredit -eq 'yes') {
     $creditValue = Read-Host -Prompt 'Enter the credit value'
-    $operations += @{ Pattern = '^#CREDIT:.*'; Replacement = "#CREDIT:$creditValue;" }
+    $operations += @{ Pattern = '^#CREDIT:.*?;'; Replacement = "#CREDIT:$creditValue;" }
   }
 
   $files = Get-Files -dir $directoryToUse -Recurse $recurse
@@ -438,7 +438,6 @@ Draw-Separator
 
 #region USER INPUT SUBREGION PREPARE FILENAMES FOR FILESHARING
 $renameFilesForSharingMessage = @"
-                                       
   If you upload files to a sharing     
   service, it might change the file    
   names. This can be problematic if    
@@ -465,27 +464,3 @@ Draw-Separator
 # Tell the user everything succeeded.
 Write-Host "All done :)"
 #endregion
-
-<#
-MIT License
-
-Copyright (c) 2024 sukibaby
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-#>

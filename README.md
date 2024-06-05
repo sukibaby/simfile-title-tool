@@ -21,7 +21,7 @@
 
 - Check for .old files and remove them in bulk.
 
-- Check for characters which may get removed by various file hosting services, and rename files & update values in simfiles accordingly
+- Check for characters which may get removed or replaced during file transfer, and rename files/update values in simfiles accordingly
 
 
 ------
@@ -46,7 +46,8 @@ or use the pre-built exe file in the Releases section:
 ### PowerShell is required!
 You can run Simfile Tool directly as a PowerShell script. 
 
-- **Windows**: PowerShell comes pre-installed with Windows, however, on Windows 11 you need to enable running PowerShell scripts first - for this reason, the tool is also provided an an exe file in the Releases section for anyone who can't or doesn't want to enable scripts (you should also be able to run the .ps1 script in the PowerShell ISE without enabling scripts system-wide).
+- **Windows**: PowerShell comes pre-installed with Windows
+  - On Windows 11, you need to enable execution of PowerShell scripts to run the .ps1 file. If you don't want to, or can't, an exe file is provided in the Releases section. The exe does not get updated as frequently as the script.
 
 - **Mac**: Mac users can download PowerShell from the Microsoft website or with Homebrew.
 
@@ -59,6 +60,7 @@ You can run Simfile Tool directly as a PowerShell script.
 **Known problems:**
 
 - Non-Unicode characters may get broken when using the auto capitalization feature.
+- Directories containing the `[` or `]` characters may result in errors (a warning will be displayed if these are detected when the program is run)
 
 **To-do's (check back soon!):**
 
