@@ -204,18 +204,63 @@ function Remove-OldFiles {
     foreach ($file in $oldFiles) {
       Write-Host "`"$($file.FullName)`""
     }
-    $message = "Do you want to remove all of the above files? (yes/no, default is no)"
-    $response = Read-Host -Prompt $message
+    $firstCheckMessage = "Do you want to remove all of the above files? (yes/no, default is no)"
+    $response = Read-Host -Prompt $firstCheckMessage
     if ($response -eq 'yes') {
-      foreach ($file in $oldFiles) {
-        Remove-Item -Path $file.FullName
+      $doubleCheckMessage = "Are you sure you want to delete these files? This action cannot be undone. (yes/no, default is no)"
+      $doubleCheckResponse = Read-Host -Prompt $doubleCheckMessage
+      if ($doubleCheckResponse -eq 'yes') {
+        foreach ($file in $oldFiles) {
+          Remove-Item -Path $file.FullName
+        }
+        Write-Host "All .old files have been removed."
+      } else {
+        Write-Host "No files were removed."
       }
-      Write-Host "All .old files have been removed."
     } else {
       Write-Host "No files were removed."
     }
   } else {
     Write-Host "No .old files found in `"$dir`"."
+  }
+}
+#endregion
+
+#region Prepare-For-Filesharing
+function Prepare-For-Filesharing {
+  param($dir,$rec)
+  # If I missed any file types that we should look for, they can be added here.
+  $files = Get-ChildItem $dir -Include *.sm,*.ssc,*.mp3,*.ogg,*.png,*.gif,*.jpg,*.jpeg -Recurse:$rec
+
+  # First, rename all the files in the directory
+  $renamedFiles = @{}
+  foreach ($file in $files) {
+    $newFileName = $file.Name -replace '[^a-zA-Z0-9._]', '_'
+    try {
+      Rename-Item -LiteralPath $file.FullName -NewName $newFileName -ErrorAction Stop
+      $renamedFiles[$file.FullName] = Join-Path $file.Directory $newFileName
+    } catch {
+      Write-Warning "Failed to rename file '$($file.FullName)' to '$newFileName'. Error: $_"
+      Write-Warning "Values in the simfile will not be changed."
+      return
+    }
+  }
+
+  # Refresh the $files variable
+  $files = Get-ChildItem $dir -Include *.sm,*.ssc,*.mp3,*.ogg,*.png,*.gif,*.jpg,*.jpeg -Recurse:$rec
+
+  # Then, update the references in each file
+  foreach ($file in $files) {
+    $content = Get-Content -LiteralPath $file.FullName
+    $content = $content | ForEach-Object {
+      if ($_ -match "#MUSIC" -or $_ -match "#BANNER" -or $_ -match "#BACKGROUND" -or $_ -match "#CDTITLE") {
+        $parts = $_ -split ':',2
+        $parts[1] = $parts[1].TrimStart().Replace(' ','_')
+        $_ = $parts -join ':'
+      }
+      $_
+    }
+    Set-Content -LiteralPath $file.FullName -Value $content
   }
 }
 #endregion
@@ -228,7 +273,7 @@ if ($null -eq $directoryToUse) {
 #endregion
 #endregion
 
-#region USER INPUT
+#region MAIN PROGRAM - USER INPUT SECTION
 #region USER INPUT SUBREGION INITIAL QUERIES
 $recursePrompt = Read-Host -Prompt "Do you want to search in subdirectories as well? (yes/no, default is yes)"
 $recurseOption = $recursePrompt -ne "no"
@@ -240,21 +285,24 @@ if ($simFiles.Count -eq 0) {
   exit
 }
 
-$displayFilesPrompt = Read-Host -Prompt 'Would you like to see the complete list of files that will be modified? (yes/no, default is yes)'
+Write-Host "Would you like to see the complete list of files "
+$displayFilesPrompt = Read-Host -Prompt ' that will be modified? (yes/no, default is yes)'
 if ($displayFilesPrompt -ne 'no') {
   Write-Host ""
   Write-Host "The following files will be modified."
-  Write-Host "Please note you'll get a chance to confirm changes before they are applied.'"
+  Write-Host "Please note you'll get a chance to confirm changes before they are applied."
   $simFiles | ForEach-Object { Write-Host $_.FullName }
 }
 
 Write-Host ""
 Check-FilePaths -dir $directoryToUse
-Draw-Separator
+Draw-Separator # End every region in this section with a Draw-Separator so everything looks nice.
 #endregion
 
 #region USER INPUT SUBREGION ISO-8859-1 VERIFICATION
-Write-Host "Unicode characters may not work in all versions of StepMania (or its derivatives)."
+Write-Host "To ensure compatibility with all versions of StepMania/ITG, you can check for"
+Write-Host "characters which may not be rendered correctly."
+Write-Host ""
 $encoding = [System.Text.Encoding]::GetEncoding('iso-8859-1')
 $unicodeCheckParams = @{
   Prompt = 'Would you like to check for Unicode characters? (yes/no, default is no)'
@@ -264,12 +312,9 @@ $unicodeCheckInput = Read-Host @unicodeCheckParams
 if ($unicodeCheckInput -eq 'yes') {
   $unicodeFiles = Get-Files -dir $directoryToUse -Recurse $recurse
   $nonUnicodeCompliantFiles = @()
-
   foreach ($file in $unicodeFiles) {
     $fileContent = Get-Content -Path $file.FullName | Out-String
-
     $convertedContent = $encoding.GetString($encoding.GetBytes($fileContent))
-
     if ($convertedContent -ne $fileContent) {
       $nonUnicodeCompliantFiles += $file.FullName
     }
@@ -298,18 +343,23 @@ if ($wannaCapitalize -eq 'yes') {
 Draw-Separator
 #endregion
 
+#region USER INPUT OFFSET ADJUSTMENT
 Update-Offset -dir $directoryToUse -rec $recurse
 Draw-Separator
+#endregion
 
 #region USER INPUT SUBREGION CHANGE FILENAME/STEP ARTIST VALUES
 $operations = @()
 
-Write-Host ""
-Write-Host "The following section changes the text values inside the simfile. It won't move any files."
-Write-Host "For example, if you plan to have a banner called 'banner.png' in all your song directories,"
-Write-Host "you would enter banner.png when prompted. You can change the banner, CD title, background,"
-Write-Host "step artist, and credit fields here."
-Write-Host ""
+Write-Host "                                                             "
+Write-Host "  The following section changes the text values inside the   "
+Write-Host "  simfile. It won't move any files.                          "
+Write-Host "  For example, if you plan to have a banner called           "
+Write-Host "  'banner.png' in all your song directories,                 "
+Write-Host "  you would enter banner.png when prompted. You can change   "
+Write-Host "  the banner, CD title, background, step artist, and credit  "
+Write-Host "  fields here.                                               "
+Write-Host "                                                             "
 $wannaModify = Read-Host -Prompt 'Would you like to modify any of these values? (yes/no, default is no)'
 if ($wannaModify -eq 'yes') {
   Write-Host ""
@@ -367,15 +417,64 @@ if ($wannaModify -eq 'yes') {
 Draw-Separator
 #endregion
 
-#region USER INPUT SUBREGION REMOVE OLD FILES
+#region USER INPUT SUBREGION FILE OPERATIONS
 $oldFilesConfirm = Read-Host -Prompt 'Would you like to check for .old files and remove them if found? (yes/no, default is no)'
 if ($oldFilesConfirm -eq 'yes') {
   Remove-OldFiles -dir $directoryToUse -rec $recurse
 } else {
   Write-Host ""
 }
-#endregion
-#endregion
 
 Draw-Separator
+#endregion
+
+#region USER INPUT SUBREGION PREPARE FILENAMES FOR FILESHARING
+Write-Host "                                       "
+Write-Host "  If you upload files to a sharing     "
+Write-Host "  service, it might change the file    "
+Write-Host "  names. This can be problematic if    "
+Write-Host "  your file names contain things like  "
+Write-Host "  spaces, parentheses, etc., to        "
+Write-Host "  prevent this your files can be       "
+Write-Host "  renamed, and your simfiles can be    "
+Write-Host "  automatically accordingly, if you    "
+Write-Host "  select `yes` here.                   "
+Write-Host "                                       "
+Write-Host "Would you like to check for spaces and special "
+$renameFilesForSharingConfirm = Read-Host -Prompt ' characters and rename the files? (yes/no, default is no)'
+if ($renameFilesForSharingConfirm -eq 'yes') {
+  Prepare-For-Filesharing -dir $directoryToUse -rec $recurse
+} else {
+  Write-Host ""
+}
+Draw-Separator
+#endregion
+#endregion <# END OF MAIN PROGRAM - USER INPUT SECTION #>
+
+#region END OF PROGRAM
+# Tell the user everything succeeded.
 Write-Host "All done :)"
+#endregion
+
+#region LICENSE
+<#MIT License
+
+Copyright (c) 2024 sukibaby
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.#>
