@@ -193,25 +193,25 @@ function Check-FilePaths {
 }
 
 function Remove-OldFiles {
-  param($dir)
-  if (!(Test-Path -Path $dir)) {
-    Write-Host "The directory `"$dir`" does not exist."
+  param($targetDir)
+  if (!(Test-Path -Path $targetDir)) {
+    Write-Host "The directory `"$targetDir`" does not exist."
     return
   }
-  $oldFiles = Get-ChildItem -Path $dir -Recurse -Filter "*.old"
-  if ($oldFiles) {
+  $oldFileList = Get-ChildItem -Path $targetDir -Recurse -Filter "*.old"
+  if ($oldFileList) {
     Write-Host "The following .old files were found:"
-    foreach ($file in $oldFiles) {
-      Write-Host "`"$($file.FullName)`""
+    foreach ($oldFile in $oldFileList) {
+      Write-Host "`"$($oldFile.FullName)`""
     }
     $firstCheckMessage = "Do you want to remove all of the above files? (yes/no, default is no)"
-    $response = Read-Host -Prompt $firstCheckMessage
-    if ($response -eq 'yes') {
-      $doubleCheckMessage = "Are you sure you want to delete these files? This action cannot be undone. (yes/no, default is no)"
+    $userResponse = Read-Host -Prompt $firstCheckMessage
+    if ($userResponse -eq 'yes') {
+      $doubleCheckMessage = "Are you sure you want to delete these files? (yes/no, default is no)"
       $doubleCheckResponse = Read-Host -Prompt $doubleCheckMessage
       if ($doubleCheckResponse -eq 'yes') {
-        foreach ($file in $oldFiles) {
-          Remove-Item -Path $file.FullName
+        foreach ($oldFile in $oldFileList) {
+          Remove-Item -Path $oldFile.FullName
         }
         Write-Host "All .old files have been removed."
       } else {
@@ -221,7 +221,7 @@ function Remove-OldFiles {
       Write-Host "No files were removed."
     }
   } else {
-    Write-Host "No .old files found in `"$dir`"."
+    Write-Host "No .old files found in `"$targetDir`"."
   }
 }
 #endregion
@@ -420,7 +420,7 @@ Draw-Separator
 #region USER INPUT SUBREGION FILE OPERATIONS
 $oldFilesConfirm = Read-Host -Prompt 'Would you like to check for .old files and remove them if found? (yes/no, default is no)'
 if ($oldFilesConfirm -eq 'yes') {
-  Remove-OldFiles -dir $directoryToUse -rec $recurse
+  Remove-OldFiles -targetDir $directoryToUse -recurse $recurse
 } else {
   Write-Host ""
 }
@@ -440,8 +440,7 @@ Write-Host "  renamed, and your simfiles can be    "
 Write-Host "  automatically accordingly, if you    "
 Write-Host "  select `yes` here.                   "
 Write-Host "                                       "
-Write-Host "Would you like to check for spaces and special "
-$renameFilesForSharingConfirm = Read-Host -Prompt ' characters and rename the files? (yes/no, default is no)'
+$renameFilesForSharingConfirm = Read-Host -Prompt 'Would you like to check for spaces and special characters and rename the files? (yes/no, default is no)'
 if ($renameFilesForSharingConfirm -eq 'yes') {
   Prepare-For-Filesharing -dir $directoryToUse -rec $recurse
 } else {
