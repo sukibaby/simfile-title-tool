@@ -60,7 +60,6 @@ You can run Simfile Tool directly as a PowerShell script.
 
 **To-do's (check back soon!):**
 
-- Enable capitalization features for step artist field
 - Release GUI version
 
 
