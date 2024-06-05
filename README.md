@@ -42,9 +42,9 @@ or use the pre-built exe file in the Releases section:
 -----
 
 ### PowerShell is required!
-You can run Simfile Tool as a PowerShell script, or download a pre-compiled Windows exe in the "Releases" section.
+You can run Simfile Tool directly as a PowerShell script. 
 
-- PowerShell comes pre-installed with Windows.
+- PowerShell comes pre-installed with Windows, however, on Windows 11 you need to enable running PowerShell scripts first, so the tool is also available as an exe file in the "Releases" section, so you can use the tool if you prefer not to, or can't, allow running scripts on your computer.
 
 - Mac users can download PowerShell from the Microsoft website or with Homebrew.
 
