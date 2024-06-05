@@ -14,7 +14,6 @@ Write-Host ""
 Write-Host "Be sure to make a backup of your files first."
 Write-Host ""
 
-#region FUNCTION DEFINITIONS
 #region Get-Directory
 function Get-Directory {
   param($dir)
@@ -273,16 +272,15 @@ function Prepare-For-Filesharing {
 }
 #endregion
 
-#region SUBREGION METHOD TO GET DIRECTORY
+#region MAIN PROGRAM, USER INPUT SECTION
+
+# METHOD TO GET DIRECTORY
 $directoryToUse = Get-Directory -dir $directoryToUse
 if ($null -eq $directoryToUse) {
   return
 }
-#endregion
-#endregion
 
-#region MAIN PROGRAM - USER INPUT SECTION
-#region USER INPUT SUBREGION INITIAL QUERIES
+#region USER INPUT SUBREGION - INITIAL QUERIES
 $recursePrompt = Read-Host -Prompt "Do you want to search in subdirectories as well? (yes/no, default is yes)"
 $recurseOption = $recursePrompt -ne "no"
 Write-Host ""
@@ -306,7 +304,7 @@ Check-FilePaths -dir $directoryToUse
 Draw-Separator # End every region in this section with a Draw-Separator so everything looks nice.
 #endregion
 
-#region USER INPUT SUBREGION ISO-8859-1 VERIFICATION
+#region USER INPUT SUBREGION - ISO-8859-1 VERIFICATION
 Write-Host "To ensure compatibility with all versions of StepMania/ITG, you can check for characters which may not be rendered correctly."
 Write-Host ""
 $encoding = [System.Text.Encoding]::GetEncoding('iso-8859-1')
@@ -336,7 +334,7 @@ if ($unicodeCheckInput -eq 'yes') {
 Draw-Separator
 #endregion
 
-#region USER INPUT SUBREGION CAPITALIZATION
+#region USER INPUT SUBREGION - CAPITALIZATION
 $wannaCapitalize = Read-Host -Prompt 'Would you like to standardize capitalization? (yes/no, default is no)'
 Write-Host "Note: This function may break Unicode-only characters."
 if ($wannaCapitalize -eq 'yes') {
@@ -349,12 +347,12 @@ if ($wannaCapitalize -eq 'yes') {
 Draw-Separator
 #endregion
 
-#region USER INPUT OFFSET ADJUSTMENT
+#region USER INPUT SUBREGION - OFFSET ADJUSTMENT
 Update-Offset -dir $directoryToUse -rec $recurse
 Draw-Separator
 #endregion
 
-#region USER INPUT SUBREGION CHANGE FILENAME/STEP ARTIST VALUES
+#region USER INPUT SUBREGION - CHANGE FILENAME/STEP ARTIST VALUES
 $operations = @()
 
 $wannaMessage = @"
@@ -425,7 +423,7 @@ if ($wannaModify -eq 'yes') {
 Draw-Separator
 #endregion
 
-#region USER INPUT SUBREGION FILE OPERATIONS
+#region USER INPUT SUBREGION - FILE OPERATIONS
 $oldFilesConfirm = Read-Host -Prompt 'Would you like to check for .old files and remove them if found? (yes/no, default is no)'
 if ($oldFilesConfirm -eq 'yes') {
   Remove-OldFiles -targetDir $directoryToUse -Recurse $recurse
@@ -436,7 +434,7 @@ if ($oldFilesConfirm -eq 'yes') {
 Draw-Separator
 #endregion
 
-#region USER INPUT SUBREGION PREPARE FILENAMES FOR FILESHARING
+#region USER INPUT SUBREGION - PREPARE FILENAMES FOR FILESHARING
 $renameFilesForSharingMessage = @"
   If you upload files to a sharing     
   service, it might change the file    
@@ -458,7 +456,6 @@ if ($renameFilesForSharingConfirm -eq 'yes') {
 }
 Draw-Separator
 #endregion
-#endregion <# END OF MAIN PROGRAM - USER INPUT SECTION #>
 
 #region END OF PROGRAM
 # Tell the user everything succeeded.
