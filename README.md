@@ -21,6 +21,8 @@
 
 - Check for .old files and remove them in bulk.
 
+- Check for characters which may get removed by various file hosting services, and rename files & update values in simfiles accordingly
+
 
 ------
 ### How to use
