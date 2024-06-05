@@ -11,7 +11,7 @@
 
 - Choose whether to use the directory you're in, or all sub-directories as well
 
-- Check for characters which may not work in all versions of StepMania (in other words, check for non-`IEC 8859-1` characters)
+- Check for characters which may not work in all versions of StepMania
 
 - Apply a consistent capitalization scheme to all title, subtitle, artist, or step artist fields
 
