@@ -1,7 +1,6 @@
 ﻿param(
   [Parameter(Position = 0)]
-  [string]$directoryToUse,
-  [switch]$discord
+  [string]$directoryToUse
 )
 
 if ($null -ne $directoryToUse) {
@@ -15,7 +14,7 @@ Write-Host ""
 Write-Host "Be sure to make a backup of your files first."
 Write-Host ""
 
-#region function definitions 
+#region fUnCtIoN DeFiNiTiOnS
 function Get-Directory {
   param($dir)
   if (!$dir -or $dir -eq "" -or !(Test-Path $dir -PathType Container)) {
@@ -38,6 +37,25 @@ function Draw-Separator {
 function Get-Files {
   param($dir,$rec)
   Get-ChildItem $dir -Include *.sm,*.ssc -Recurse:$rec
+}
+
+# The result of the prompt is a global variable so it can be reused if Update-Capitalization-StepArtist is called.
+function Update-Field-Capitalization {
+  param($dir,$rec,$field)
+  Write-Host ""
+  $changeField = Read-Host -Prompt "Would you like to change the $field field capitalization? (yes/no, default is no)"
+  if ($changeField -eq 'yes') {
+    $global:capitalizationPromptAnswer = Read-Host -Prompt "Please enter one of the following switches: u (uppercase), t (title case), l (lower case)"
+    if ($global:capitalizationPromptAnswer -notin @("u","t","l")) {
+      Write-Error "Invalid switch: $global:capitalizationPromptAnswer. Please provide one of the following switches: u (uppercase), t (title case), l (lower case)"
+      return
+    }
+    if ($field -eq "STEPARTIST") {
+      Update-Capitalization-StepArtist -StepArtist_dir $dir -StepArtist_rec $rec
+    } else {
+      Update-Capitalization -dir $dir -rec $rec -field $field -switch $global:capitalizationPromptAnswer
+    }
+  }
 }
 
 function Update-Capitalization {
@@ -75,26 +93,6 @@ function Update-Content {
       }
     }
     Set-Content -LiteralPath $file.FullName -Value $content
-  }
-}
-
-function Discordifier {
-  param($dir,$rec)
-  $files = Get-Files -dir $dir -rec $rec
-  foreach ($file in $files) {
-    $content = Get-Content -LiteralPath $file.FullName
-    $content = $content | ForEach-Object {
-      if ($_ -match "#MUSIC" -or $_ -match "#BANNER" -or $_ -match "#BACKGROUND" -or $_ -match "#CDTITLE") {
-        $parts = $_ -split ':',2
-        $parts[1] = $parts[1].TrimStart().Replace(' ','_')
-        $_ = $parts -join ':'
-      }
-      $_
-    }
-    Set-Content -Path $file.FullName -Value $content
-
-    $newFileName = $file.Name.Replace(' ','_')
-    Rename-Item -Path $file.FullName -NewName $newFileName
   }
 }
 
@@ -166,20 +164,6 @@ function Check-FilePaths {
   }
 }
 
-function Update-Field-Capitalization {
-  param($dir,$rec,$field)
-  Write-Host ""
-  $changeField = Read-Host -Prompt "Would you like to change the $field field capitalization? (yes/no, default is no)"
-  if ($changeField -eq 'yes') {
-    $switch = Read-Host -Prompt "Please enter one of the following switches: u (uppercase), t (title case), l (lower case)"
-    if ($switch -notin @("u","t","l")) {
-      Write-Error "Invalid switch: $switch. Please provide one of the following switches: u (uppercase), t (title case), l (lower case)"
-      return
-    }
-    Update-Capitalization -dir $dir -rec $rec -field $field -switch $switch
-  }
-}
-
 function Remove-OldFiles {
     param ($dir)
     if (!(Test-Path -Path $dir)) {
@@ -213,7 +197,8 @@ if ($null -eq $directoryToUse) {
 }
 #endregion
 
-#region user input - search and check files
+#region USER INPUT
+#region uSeR InPuT - SeArCh aNd cHeCk fIlEs
 $useRecurse = Read-Host -Prompt "Do you want to search in subdirectories as well? (yes/no, default is yes)"
 $recurse = $useRecurse -ne "no"
 Write-Host ""
@@ -238,7 +223,7 @@ Check-FilePaths -dir $directoryToUse
 Draw-Separator
 #endregion
 
-#region user input - unicode check
+#region uSeR InPuT - UnIcOdE ChEcK
 Write-Host "Unicode characters may not work in all versions of StepMania (or its derivatives)."
 $encoding = [System.Text.Encoding]::GetEncoding('iso-8859-1')
 $readHostParams = @{
@@ -269,20 +254,24 @@ if ($userInput -eq 'yes') {
 Draw-Separator
 #endregion
 
-#region user input - capitalization
+#region uSeR InPuT - CaPiTaLiZaTiOn
 $wannaCapitalize = Read-Host -Prompt 'Would you like to standardize capitalization? (yes/no, default is no)'
+Write-Host "Note: This function may break Unicode-only characters."
 if ($wannaCapitalize -eq 'yes') {
   Update-Field-Capitalization -dir $directoryToUse -rec $recurse -field "TITLE"
   Update-Field-Capitalization -dir $directoryToUse -rec $recurse -field "SUBTITLE"
   Update-Field-Capitalization -dir $directoryToUse -rec $recurse -field "ARTIST"
+  # not working yet
+  #Update-Field-Capitalization -dir $directoryToUse -rec $recurse -field "STEPARTIST"
 }
+
 Draw-Separator
 #endregion
 
 Update-Offset -dir $directoryToUse -rec $recurse
 Draw-Separator
 
-#region user input - prompts to change values
+#region uSeR InPuT - PrOmPtS To cHaNgE VaLuEs
 $operations = @()
 
 Write-Host ""
@@ -347,7 +336,7 @@ if ($wannaModify -eq 'yes') {
 Draw-Separator
 #endregion
 
-#region user input - remove .old Files
+#region uSeR InPuT - ReMoVe .OlD FiLeS
   $confirm = Read-Host -Prompt 'Would you like to check for .old files and remove them if found? (yes/no, default is no)'
   if ($confirm -eq 'yes') {
     Remove-OldFiles -dir $directoryToUse -rec $recurse
@@ -355,22 +344,6 @@ Draw-Separator
     Write-Host ""
   }
 #endregion
-
-#region user input - discord filename fixer
-if ($discord) {
-  Write-Host ""
-  Write-Host "If you upload files to Discord, it will replace spaces in file names with underscores."
-  Write-Host "Would you like to rename files to replace spaces with underscores, and update the fields"
-  Write-Host "in the simfiles accordingly? Please note, this will rename your simfile that was named"
-  Write-Host "earlier, but it will not rename other files in the directory you specified."
-  Write-Host ""
-  $confirm = Read-Host -Prompt 'Would you like to replace spaces with underscores in file names and specified fields? (yes/no, default is no)'
-  if ($confirm -eq 'yes') {
-    Discordifier -dir $directoryToUse -rec $recurse
-  } else {
-    Write-Host ""
-  }
-}
 #endregion
 
 Draw-Separator
