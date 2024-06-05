@@ -14,7 +14,8 @@ Write-Host ""
 Write-Host "Be sure to make a backup of your files first."
 Write-Host ""
 
-#region fUnCtIoN DeFiNiTiOnS
+#region FUNCTION DEFINITIONS
+#region Get-Directory
 function Get-Directory {
   param($dir)
   if (!$dir -or $dir -eq "" -or !(Test-Path $dir -PathType Container)) {
@@ -27,18 +28,24 @@ function Get-Directory {
   }
   return $dir
 }
+#endregion
 
+#region Draw-Separator
 function Draw-Separator {
   Write-Host ""
   Write-Host "--------------------------------------------------"
   Write-Host ""
 }
+#endregion
 
+#region Get-Files
 function Get-Files {
   param($dir,$rec)
   Get-ChildItem $dir -Include *.sm,*.ssc -Recurse:$rec
 }
+#endregion
 
+#region Update-Field-Capitalization, Update-Capitalization, Update-Capitalization-StepArtist
 # The result of the prompt is a global variable so it can be reused if Update-Capitalization-StepArtist is called.
 function Update-Field-Capitalization {
   param($dir,$rec,$field)
@@ -90,16 +97,18 @@ function Update-Capitalization-StepArtist {
       if ($StepArtist_content[$i] -match "//---------------(dance-.*) - (.*?)----------------") {
         $matchedGroup = $Matches[2]
         switch ($global:capitalizationPromptAnswer) {
-          "u" { $StepArtist_content[$i] = $StepArtist_content[$i].Replace($matchedGroup, $matchedGroup.ToUpper()) }
-          "t" { $StepArtist_content[$i] = $StepArtist_content[$i].Replace($matchedGroup, (Get-Culture).TextInfo.ToTitleCase($matchedGroup.ToLower())) }
-          "l" { $StepArtist_content[$i] = $StepArtist_content[$i].Replace($matchedGroup, $matchedGroup.ToLower()) }
+          "u" { $StepArtist_content[$i] = $StepArtist_content[$i].Replace($matchedGroup,$matchedGroup.ToUpper()) }
+          "t" { $StepArtist_content[$i] = $StepArtist_content[$i].Replace($matchedGroup,(Get-Culture).TextInfo.ToTitleCase($matchedGroup.ToLower())) }
+          "l" { $StepArtist_content[$i] = $StepArtist_content[$i].Replace($matchedGroup,$matchedGroup.ToLower()) }
         }
       }
     }
     Set-Content -Path $StepArtist_file.FullName -Value $StepArtist_content
   }
 }
+#endregion
 
+#region Update-Content, Update-Offset, Update-File
 function Update-Content {
   param($dir,$rec,$pattern,$replacement)
   $files = Get-Files -dir $dir -rec $rec
@@ -150,12 +159,10 @@ function Update-Offset {
   }
 }
 
-Write-Host ""
-
 function Update-File {
-  param($file,$operations)
+  param($file,$operationsPTCV)
   $content = Get-Content -LiteralPath $file.FullName
-  foreach ($operation in $operations) {
+  foreach ($operation in $operationsPTCV) {
     for ($i = 0; $i -lt $content.Length; $i++) {
       if ($content[$i] -match $operation.Pattern) {
         Write-Host "Replacing '$($content[$i])' with '$($operation.Replacement)'"
@@ -165,7 +172,9 @@ function Update-File {
   }
   Set-Content -LiteralPath $file.FullName -Value $content
 }
+#endregion
 
+#region Check-FilePaths, Remove-OldFiles
 function Check-FilePaths {
   param($dir)
   $files = Get-ChildItem $dir -Recurse -File
@@ -184,96 +193,99 @@ function Check-FilePaths {
 }
 
 function Remove-OldFiles {
-    param ($dir)
-    if (!(Test-Path -Path $dir)) {
-        Write-Host "The directory `"$dir`" does not exist."
-        return
+  param($dir)
+  if (!(Test-Path -Path $dir)) {
+    Write-Host "The directory `"$dir`" does not exist."
+    return
+  }
+  $oldFiles = Get-ChildItem -Path $dir -Recurse -Filter "*.old"
+  if ($oldFiles) {
+    Write-Host "The following .old files were found:"
+    foreach ($file in $oldFiles) {
+      Write-Host "`"$($file.FullName)`""
     }
-    $oldFiles = Get-ChildItem -Path $dir -Recurse -Filter "*.old"
-    if ($oldFiles) {
-        Write-Host "The following .old files were found:"
-        foreach ($file in $oldFiles) {
-            Write-Host "`"$($file.FullName)`""
-        }
-        $message = "Do you want to remove all of the above files? (yes/no, default is no)"
-        $response = Read-Host -Prompt $message
-        if ($response -eq 'yes') {
-            foreach ($file in $oldFiles) {
-                Remove-Item -Path $file.FullName
-            }
-            Write-Host "All .old files have been removed."
-        } else {
-            Write-Host "No files were removed."
-        }
+    $message = "Do you want to remove all of the above files? (yes/no, default is no)"
+    $response = Read-Host -Prompt $message
+    if ($response -eq 'yes') {
+      foreach ($file in $oldFiles) {
+        Remove-Item -Path $file.FullName
+      }
+      Write-Host "All .old files have been removed."
     } else {
-        Write-Host "No .old files found in `"$dir`"."
+      Write-Host "No files were removed."
     }
+  } else {
+    Write-Host "No .old files found in `"$dir`"."
+  }
 }
+#endregion
 
+#region SUBREGION METHOD TO GET DIRECTORY
 $directoryToUse = Get-Directory -dir $directoryToUse
 if ($null -eq $directoryToUse) {
   return
 }
 #endregion
+#endregion
 
 #region USER INPUT
-#region uSeR InPuT - SeArCh aNd cHeCk fIlEs
-$useRecurse = Read-Host -Prompt "Do you want to search in subdirectories as well? (yes/no, default is yes)"
-$recurse = $useRecurse -ne "no"
+#region USER INPUT SUBREGION INITIAL QUERIES
+$recursePrompt = Read-Host -Prompt "Do you want to search in subdirectories as well? (yes/no, default is yes)"
+$recurseOption = $recursePrompt -ne "no"
 Write-Host ""
 
-$files = Get-Files -dir $directoryToUse -Recurse $recurse
-if ($files.Count -eq 0) {
+$simFiles = Get-Files -dir $directoryToUse -Recurse $recurseOption
+if ($simFiles.Count -eq 0) {
   Write-Host "No simfiles were found. Exiting..."
   exit
 }
 
-$showFiles = Read-Host -Prompt 'Would you like to see the complete list of files that will be modified? (yes/no, default is yes)'
-if ($showFiles -ne 'no') {
+$displayFilesPrompt = Read-Host -Prompt 'Would you like to see the complete list of files that will be modified? (yes/no, default is yes)'
+if ($displayFilesPrompt -ne 'no') {
   Write-Host ""
   Write-Host "The following files will be modified."
   Write-Host "Please note you'll get a chance to confirm changes before they are applied.'"
-  $files | ForEach-Object { Write-Host $_.FullName }
+  $simFiles | ForEach-Object { Write-Host $_.FullName }
 }
 
 Write-Host ""
-
 Check-FilePaths -dir $directoryToUse
 Draw-Separator
 #endregion
 
-#region uSeR InPuT - UnIcOdE ChEcK
+#region USER INPUT SUBREGION ISO-8859-1 VERIFICATION
 Write-Host "Unicode characters may not work in all versions of StepMania (or its derivatives)."
 $encoding = [System.Text.Encoding]::GetEncoding('iso-8859-1')
-$readHostParams = @{
+$unicodeCheckParams = @{
   Prompt = 'Would you like to check for Unicode characters? (yes/no, default is no)'
   AsSecureString = $false
 }
-$userInput = Read-Host @readHostParams
-if ($userInput -eq 'yes') {
-  $files = Get-Files -dir $directoryToUse -Recurse $recurse
-  $nonCompliantFiles = @()
+$unicodeCheckInput = Read-Host @unicodeCheckParams
+if ($unicodeCheckInput -eq 'yes') {
+  $unicodeFiles = Get-Files -dir $directoryToUse -Recurse $recurse
+  $nonUnicodeCompliantFiles = @()
 
-  foreach ($file in $files) {
-    $content = Get-Content -Path $file.FullName | Out-String
+  foreach ($file in $unicodeFiles) {
+    $fileContent = Get-Content -Path $file.FullName | Out-String
 
-    $convertedContent = $encoding.GetString($encoding.GetBytes($content))
+    $convertedContent = $encoding.GetString($encoding.GetBytes($fileContent))
 
-    if ($convertedContent -ne $content) {
-      $nonCompliantFiles += $file.FullName
+    if ($convertedContent -ne $fileContent) {
+      $nonUnicodeCompliantFiles += $file.FullName
     }
   }
 
-  if ($nonCompliantFiles.Count -eq 0) {
+  if ($nonUnicodeCompliantFiles.Count -eq 0) {
     Write-Host "Check completed successfully. No problematic characters were found."
   } else {
-    $nonCompliantFiles
+    $nonUnicodeCompliantFiles
   }
 } else {}
+
 Draw-Separator
 #endregion
 
-#region uSeR InPuT - CaPiTaLiZaTiOn
+#region USER INPUT SUBREGION CAPITALIZATION
 $wannaCapitalize = Read-Host -Prompt 'Would you like to standardize capitalization? (yes/no, default is no)'
 Write-Host "Note: This function may break Unicode-only characters."
 if ($wannaCapitalize -eq 'yes') {
@@ -289,8 +301,8 @@ Draw-Separator
 Update-Offset -dir $directoryToUse -rec $recurse
 Draw-Separator
 
-#region uSeR InPuT - PrOmPtS To cHaNgE VaLuEs
-$operations = @()
+#region USER INPUT SUBREGION PROMPTS TO REMOVE OLD FILES
+$operationsPTCV = @()
 
 Write-Host ""
 Write-Host "The following section changes the text values inside the simfile. It won't move any files."
@@ -298,69 +310,63 @@ Write-Host "For example, if you plan to have a banner called 'banner.png' in all
 Write-Host "you would enter banner.png when prompted. You can change the banner, CD title, background,"
 Write-Host "step artist, and credit fields here."
 Write-Host ""
-$wannaModify = Read-Host -Prompt 'Would you like to modify any of these values? (yes/no, default is no)'
-if ($wannaModify -eq 'yes') {
-  Write-Host ""
-  $addBanner = Read-Host -Prompt 'Would you like to add a banner to all files? (yes/no, default is no)'
-  if ($addBanner -eq 'yes') {
-    $bannerPrompt = Read-Host -Prompt 'Enter the banner file name, including extension'
-    $operations += @{ Pattern = '^#BANNER:.*'; Replacement = "#BANNER:$bannerPrompt" }
+$modifyValuesConfirm = Read-Host -Prompt 'Would you like to modify any of these values? (yes/no, default is no)'
+if ($modifyValuesConfirm -eq 'yes') {
+  $addBannerConfirm = Read-Host -Prompt 'Would you like to add a banner to all files? (yes/no, default is no)'
+  if ($addBannerConfirm -eq 'yes') {
+    $bannerFileName = Read-Host -Prompt 'Enter the banner file name, including extension'
+    $operationsPTCV += @{ Pattern = '^#BANNER:.*'; Replacement = "#BANNER:$bannerFileName" }
   }
 
-  Write-Host ""
-  $addCDTitle = Read-Host -Prompt 'Would you like to add a CD title to all files? (yes/no, default is no)'
-  if ($addCDTitle -eq 'yes') {
-    $CDTitlePrompt = Read-Host -Prompt 'Enter the CD title file name, including extension'
-    $operations += @{ Pattern = '^#CDTITLE:.*'; Replacement = "#CDTITLE:$CDTitlePrompt" }
+  $addCDTitleConfirm = Read-Host -Prompt 'Would you like to add a CD title to all files? (yes/no, default is no)'
+  if ($addCDTitleConfirm -eq 'yes') {
+    $cdTitleFileName = Read-Host -Prompt 'Enter the CD title file name, including extension'
+    $operationsPTCV += @{ Pattern = '^#CDTITLE:.*'; Replacement = "#CDTITLE:$cdTitleFileName" }
   }
 
-  Write-Host ""
-  $addBG = Read-Host -Prompt 'Would you like to add a background to all files? (yes/no, default is no)'
-  if ($addBG -eq 'yes') {
-    $BGPrompt = Read-Host -Prompt 'Enter the background file name, including extension'
-    $operations += @{ Pattern = '^#BACKGROUND:.*'; Replacement = "#BACKGROUND:$BGPrompt" }
+  $addBGConfirm = Read-Host -Prompt 'Would you like to add a background to all files? (yes/no, default is no)'
+  if ($addBGConfirm -eq 'yes') {
+    $bgFileName = Read-Host -Prompt 'Enter the background file name, including extension'
+    $operationsPTCV += @{ Pattern = '^#BACKGROUND:.*'; Replacement = "#BACKGROUND:$bgFileName" }
   }
 
-  Write-Host ""
-  $setStepArtist = Read-Host -Prompt 'Would you like to set something for the step artist field? This is the per-chart credit. (yes/no, default is no)'
-  if ($setStepArtist -eq 'yes') {
-    $stepArtist = Read-Host -Prompt 'Enter the credit value'
-    <# To-do: add more chart types below (pump, smx, etc) #>
+  $setStepArtistConfirm = Read-Host -Prompt 'Would you like to set something for the step artist field? This is the per-chart credit. (yes/no, default is no)'
+  if ($setStepArtistConfirm -eq 'yes') {
+    $stepArtistCredit = Read-Host -Prompt 'Enter the credit value'
     $danceTypes = @("dance-single","dance-double","dance-couple","dance-solo")
     foreach ($danceType in $danceTypes) {
-      $operations += @{ Pattern = "//--------------- $danceType - (.*?) ----------------"; Replacement = "//--------------- $danceType - $stepArtist ----------------" }
+      $operationsPTCV += @{ Pattern = "//--------------- $danceType - (.*?) ----------------"; Replacement = "//--------------- $danceType - $stepArtistCredit ----------------" }
     }
   }
 
-  Write-Host ""
-  $setCredit = Read-Host -Prompt 'Would you like to set something for the credit field? (This is the #CREDIT field for the simfile, not the per-chart "Step artist" field.) (yes/no, default is no)'
-  if ($setCredit -eq 'yes') {
+  $setCreditConfirm = Read-Host -Prompt 'Would you like to set something for the credit field? (This is the #CREDIT field for the simfile, not the per-chart "Step artist" field.) (yes/no, default is no)'
+  if ($setCreditConfirm -eq 'yes') {
     $creditValue = Read-Host -Prompt 'Enter the credit value'
-    $operations += @{ Pattern = '^#CREDIT:.*'; Replacement = "#CREDIT:$creditValue" }
+    $operationsPTCV += @{ Pattern = '^#CREDIT:.*'; Replacement = "#CREDIT:$creditValue" }
   }
 
-  $files = Get-Files -dir $directoryToUse -Recurse $recurse
-  $confirmation = Read-Host "Are you sure you want to apply changes? (yes/no, default is no)"
-  Write-Host ""
-  if ($confirmation -eq "yes") {
-    foreach ($file in $files) {
+  $filesToModify = Get-Files -dir $directoryToUse -Recurse $recurse
+  $applyChangesConfirm = Read-Host "Are you sure you want to apply changes? (yes/no, default is no)"
+  if ($applyChangesConfirm -eq "yes") {
+    foreach ($file in $filesToModify) {
       Write-Host "Applying changes to file: $($file.FullName)"
-      Update-File -File $file -operations $operations
+      Update-File -File $file -operations $operationsPTCV
     }
   } else {
     Write-Host "No changes were made."
   }
 }
+
 Draw-Separator
 #endregion
 
-#region uSeR InPuT - ReMoVe .OlD FiLeS
-  $confirm = Read-Host -Prompt 'Would you like to check for .old files and remove them if found? (yes/no, default is no)'
-  if ($confirm -eq 'yes') {
-    Remove-OldFiles -dir $directoryToUse -rec $recurse
-  } else {
-    Write-Host ""
-  }
+#region USER INPUT SUBREGION REMOVE OLD FILES
+$oldFilesConfirm = Read-Host -Prompt 'Would you like to check for .old files and remove them if found? (yes/no, default is no)'
+if ($oldFilesConfirm -eq 'yes') {
+  Remove-OldFiles -oldFilesDir $directoryToUse -oldFilesRecurse $recurse
+} else {
+  Write-Host ""
+}
 #endregion
 #endregion
 
