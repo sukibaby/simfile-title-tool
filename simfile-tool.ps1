@@ -27,6 +27,12 @@ function Get-Directory {
   }
   return $dir
 }
+
+# METHOD TO GET DIRECTORY
+$directoryToUse = Get-Directory -dir $directoryToUse
+if ($null -eq $directoryToUse) {
+  return
+}
 #endregion
 
 #region Draw-Separator
@@ -271,14 +277,6 @@ function Prepare-For-Filesharing {
   }
 }
 #endregion
-
-#region MAIN PROGRAM, USER INPUT SECTION
-
-# METHOD TO GET DIRECTORY
-$directoryToUse = Get-Directory -dir $directoryToUse
-if ($null -eq $directoryToUse) {
-  return
-}
 
 #region USER INPUT SUBREGION - INITIAL QUERIES
 $recursePrompt = Read-Host -Prompt "Do you want to search in subdirectories as well? (yes/no, default is yes)"
