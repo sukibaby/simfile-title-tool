@@ -4,8 +4,7 @@
 ### Easily manage all your simfiles/stepcharts. Compatible with `.sm` and `.ssc` formats, and works fine with very large directories containing thousands of simfiles.
 
 
-
-https://github.com/sukibaby/simfile-tool/assets/163092272/15c4e040-ece5-4354-abdf-32ea1acff859
+[Windows PowerShell 2024-06-05.webm](https://github.com/sukibaby/simfile-tool/assets/163092272/9f71266c-a486-4023-a4d6-f6fa5b014a0c)
 
 
   -----
