@@ -3,6 +3,11 @@
 
 ### Easily manage all your simfiles/stepcharts. Compatible with `.sm` and `.ssc` formats, and works fine with very large directories containing thousands of simfiles.
 
+
+
+https://github.com/sukibaby/simfile-tool/assets/163092272/15c4e040-ece5-4354-abdf-32ea1acff859
+
+
   -----
 
 ### With this program, you can:
