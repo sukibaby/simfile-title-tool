@@ -1,5 +1,5 @@
 
-# Simfile tool :)
+# Sukibaby's Simfile Tool :)
 
 ### Easily manage all your simfiles/stepcharts. Compatible with `.sm` and `.ssc` formats, and works fine with very large directories containing thousands of simfiles.
 
