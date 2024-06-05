@@ -1,3 +1,12 @@
+<# Sukibaby's Simfile Tool 
+   https://github.com/sukibaby/simfile-tool 
+   
+   You can run the script directly like so:
+
+   PS C:\Users\Stepper\Downloads> & '.\simfile-tool.ps1' "C:\Games\StepMania 5\Songs\In The Groove"
+   #>
+
+#region Initializing Functions
 param(
   [Parameter(Position = 0)]
   [string]$directoryToUse
@@ -13,6 +22,7 @@ Write-Host "https://github.com/sukibaby/simfile-tool"
 Write-Host ""
 Write-Host "Be sure to make a backup of your files first."
 Write-Host ""
+#endregion
 
 #region Get-Directory
 function Get-Directory {
