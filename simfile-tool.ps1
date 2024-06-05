@@ -160,9 +160,9 @@ function Update-Offset {
 }
 
 function Update-File {
-  param($file,$updateFileArray)
+  param($file,$operations)
   $content = Get-Content -LiteralPath $file.FullName
-  foreach ($operation in $updateFileArray) {
+  foreach ($operation in $operations) {
     for ($i = 0; $i -lt $content.Length; $i++) {
       if ($content[$i] -match $operation.Pattern) {
         Write-Host "Replacing '$($content[$i])' with '$($operation.Replacement)'"
@@ -302,7 +302,7 @@ Update-Offset -dir $directoryToUse -rec $recurse
 Draw-Separator
 
 #region USER INPUT SUBREGION CHANGE FILENAME/STEP ARTIST VALUES
-$updateFileArray = @()
+$operations = @()
 
 Write-Host ""
 Write-Host "The following section changes the text values inside the simfile. It won't move any files."
@@ -310,47 +310,54 @@ Write-Host "For example, if you plan to have a banner called 'banner.png' in all
 Write-Host "you would enter banner.png when prompted. You can change the banner, CD title, background,"
 Write-Host "step artist, and credit fields here."
 Write-Host ""
-$modifyValuesConfirm = Read-Host -Prompt 'Would you like to modify any of these values? (yes/no, default is no)'
-if ($modifyValuesConfirm -eq 'yes') {
-  $addBannerConfirm = Read-Host -Prompt 'Would you like to add a banner to all files? (yes/no, default is no)'
-  if ($addBannerConfirm -eq 'yes') {
-    $bannerFileName = Read-Host -Prompt 'Enter the banner file name, including extension'
-    $updateFileArray += @{ Pattern = '^#BANNER:.*'; Replacement = "#BANNER:$bannerFileName" }
+$wannaModify = Read-Host -Prompt 'Would you like to modify any of these values? (yes/no, default is no)'
+if ($wannaModify -eq 'yes') {
+  Write-Host ""
+  $addBanner = Read-Host -Prompt 'Would you like to add a banner to all files? (yes/no, default is no)'
+  if ($addBanner -eq 'yes') {
+    $bannerPrompt = Read-Host -Prompt 'Enter the banner file name, including extension'
+    $operations += @{ Pattern = '^#BANNER:.*'; Replacement = "#BANNER:$bannerPrompt;" }
   }
 
-  $addCDTitleConfirm = Read-Host -Prompt 'Would you like to add a CD title to all files? (yes/no, default is no)'
-  if ($addCDTitleConfirm -eq 'yes') {
-    $cdTitleFileName = Read-Host -Prompt 'Enter the CD title file name, including extension'
-    $updateFileArray += @{ Pattern = '^#CDTITLE:.*'; Replacement = "#CDTITLE:$cdTitleFileName" }
+  Write-Host ""
+  $addCDTitle = Read-Host -Prompt 'Would you like to add a CD title to all files? (yes/no, default is no)'
+  if ($addCDTitle -eq 'yes') {
+    $CDTitlePrompt = Read-Host -Prompt 'Enter the CD title file name, including extension'
+    $operations += @{ Pattern = '^#CDTITLE:.*'; Replacement = "#CDTITLE:$CDTitlePrompt;" }
   }
 
-  $addBGConfirm = Read-Host -Prompt 'Would you like to add a background to all files? (yes/no, default is no)'
-  if ($addBGConfirm -eq 'yes') {
-    $bgFileName = Read-Host -Prompt 'Enter the background file name, including extension'
-    $updateFileArray += @{ Pattern = '^#BACKGROUND:.*'; Replacement = "#BACKGROUND:$bgFileName" }
+  Write-Host ""
+  $addBG = Read-Host -Prompt 'Would you like to add a background to all files? (yes/no, default is no)'
+  if ($addBG -eq 'yes') {
+    $BGPrompt = Read-Host -Prompt 'Enter the background file name, including extension'
+    $operations += @{ Pattern = '^#BACKGROUND:.*'; Replacement = "#BACKGROUND:$BGPrompt;" }
   }
 
-  $setStepArtistConfirm = Read-Host -Prompt 'Would you like to set something for the step artist field? This is the per-chart credit. (yes/no, default is no)'
-  if ($setStepArtistConfirm -eq 'yes') {
-    $stepArtistCredit = Read-Host -Prompt 'Enter the credit value'
+  Write-Host ""
+  $setStepArtist = Read-Host -Prompt 'Would you like to set something for the step artist field? This is the per-chart credit. (yes/no, default is no)'
+  if ($setStepArtist -eq 'yes') {
+    $stepArtist = Read-Host -Prompt 'Enter the credit value'
+    <# To-do: add more chart types below (pump, smx, etc) #>
     $danceTypes = @("dance-single","dance-double","dance-couple","dance-solo")
     foreach ($danceType in $danceTypes) {
-      $updateFileArray += @{ Pattern = "//--------------- $danceType - (.*?) ----------------"; Replacement = "//--------------- $danceType - $stepArtistCredit ----------------" }
+      $operations += @{ Pattern = "//--------------- $danceType - (.*?) ----------------"; Replacement = "//--------------- $danceType - $stepArtist ----------------" }
     }
   }
 
-  $setCreditConfirm = Read-Host -Prompt 'Would you like to set something for the credit field? (This is the #CREDIT field for the simfile, not the per-chart "Step artist" field.) (yes/no, default is no)'
-  if ($setCreditConfirm -eq 'yes') {
+  Write-Host ""
+  $setCredit = Read-Host -Prompt 'Would you like to set something for the credit field? (This is the #CREDIT field for the simfile, not the per-chart "Step artist" field.) (yes/no, default is no)'
+  if ($setCredit -eq 'yes') {
     $creditValue = Read-Host -Prompt 'Enter the credit value'
-    $updateFileArray += @{ Pattern = '^#CREDIT:.*'; Replacement = "#CREDIT:$creditValue" }
+    $operations += @{ Pattern = '^#CREDIT:.*'; Replacement = "#CREDIT:$creditValue;" }
   }
 
-  $filesToModify = Get-Files -dir $directoryToUse -Recurse $recurse
-  $applyChangesConfirm = Read-Host "Are you sure you want to apply changes? (yes/no, default is no)"
-  if ($applyChangesConfirm -eq "yes") {
-    foreach ($file in $filesToModify) {
+  $files = Get-Files -dir $directoryToUse -Recurse $recurse
+  $confirmation = Read-Host "Are you sure you want to apply changes? (yes/no, default is no)"
+  Write-Host ""
+  if ($confirmation -eq "yes") {
+    foreach ($file in $files) {
       Write-Host "Applying changes to file: $($file.FullName)"
-      Update-File -File $file -operations $updateFileArray
+      Update-File -File $file -operations $operations
     }
   } else {
     Write-Host "No changes were made."
@@ -363,7 +370,7 @@ Draw-Separator
 #region USER INPUT SUBREGION REMOVE OLD FILES
 $oldFilesConfirm = Read-Host -Prompt 'Would you like to check for .old files and remove them if found? (yes/no, default is no)'
 if ($oldFilesConfirm -eq 'yes') {
-  Remove-OldFiles -oldFilesDir $directoryToUse -oldFilesRecurse $recurse
+  Remove-OldFiles -dir $directoryToUse -rec $recurse
 } else {
   Write-Host ""
 }
