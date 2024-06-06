@@ -3,9 +3,7 @@
 
 ### Easily manage all your simfiles/stepcharts. Compatible with `.sm` and `.ssc` formats, and works fine with very large directories containing thousands of simfiles.
 
-
-[Windows PowerShell 2024-06-05.webm](https://github.com/sukibaby/simfile-tool/assets/163092272/9f71266c-a486-4023-a4d6-f6fa5b014a0c)
-
+**New: Added a second script, `CopyIntoAllDirs.ps1`, which can be used to copy a file into every subdirectory of a given directory. This is very useful for quickly copying a banner or CD title into all song folders, for example.**
 
   -----
 
@@ -67,4 +65,5 @@ or use the pre-built exe file in the Releases section:
 
 *If you run into any issues, or have any suggestions, please note them on the Issues section!*
 
+[Windows PowerShell 2024-06-05.webm](https://github.com/sukibaby/simfile-tool/assets/163092272/9f71266c-a486-4023-a4d6-f6fa5b014a0c)
 
