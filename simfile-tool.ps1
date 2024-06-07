@@ -3,10 +3,9 @@
    
    You can run the script directly like so:
 
-   PS C:\Users\Stepper\Downloads> & '.\simfile-tool.ps1' "C:\Games\StepMania 5\Songs\In The Groove"
-   #>
+   PS C:\Users\Stepper\Downloads> & '.\simfile-tool.ps1' "C:\Games\StepMania 5\Songs\In The Groove"   #>
 
-#region Initializing Functions
+#region BEGINNING OF PROGRAM
 param(
   [Parameter(Position = 0)]
   [string]$directoryToUse
@@ -24,7 +23,7 @@ Write-Host "Be sure to make a backup of your files first."
 Write-Host ""
 #endregion
 
-#region Get-Directory
+#region FUNCTION Get-Directory
 function Get-Directory {
   param($dir)
   if (!$dir -or $dir -eq "" -or !(Test-Path $dir -PathType Container)) {
@@ -45,7 +44,7 @@ if ($null -eq $directoryToUse) {
 }
 #endregion
 
-#region Draw-Separator
+#region FUNCTION Draw-Separator
 function Draw-Separator {
   Write-Host ""
   Write-Host "--------------------------------------------------"
@@ -53,14 +52,14 @@ function Draw-Separator {
 }
 #endregion
 
-#region Get-Files
+#region FUNCTION Get-Files
 function Get-Files {
   param($dir,$rec)
   Get-ChildItem $dir -Include *.sm,*.ssc -Recurse:$rec
 }
 #endregion
 
-#region Update-Field-Capitalization, Update-Capitalization, Update-Capitalization-StepArtist
+#region FUNCTION Update-Field-Capitalization, Update-Capitalization, Update-Capitalization-StepArtist
 # The result of the prompt is a global variable so it can be reused if Update-Capitalization-StepArtist is called.
 function Update-Field-Capitalization {
   param($dir,$rec,$field)
@@ -123,7 +122,7 @@ function Update-Capitalization-StepArtist {
 }
 #endregion
 
-#region Update-Content, Update-Offset, Update-File
+#region FUNCTION Update-Content, Update-Offset, Update-File
 function Update-Content {
   param($dir,$rec,$pattern,$replacement)
   $files = Get-Files -dir $dir -rec $rec
@@ -189,7 +188,7 @@ function Update-File {
 }
 #endregion
 
-#region Check-FilePaths, Remove-OldFiles
+#region FUNCTION Check-FilePaths, Remove-OldFiles
 function Check-FilePaths {
   param($dir)
   $files = Get-ChildItem $dir -Recurse -File
@@ -248,8 +247,8 @@ function Remove-OldFiles {
 }
 #endregion
 
-#region Prepare-For-Filesharing
-function Prepare-For-Filesharing {
+#region FUNCTION Prepare-Filenames-For-Filesharing
+function Prepare-Filenames-For-Filesharing {
   param($dir,$rec)
   # If I missed any file types that we should look for, they can be added here.
   $files = Get-ChildItem $dir -Include *.sm,*.ssc,*.mp3,*.ogg,*.png,*.gif,*.jpg,*.jpeg -Recurse:$rec
@@ -288,7 +287,7 @@ function Prepare-For-Filesharing {
 }
 #endregion
 
-#region USER INPUT SUBREGION - INITIAL QUERIES
+#region USER INPUT Get Subdirectory Query
 $recursePrompt = Read-Host -Prompt "Do you want to search in subdirectories as well? (yes/no, default is yes)"
 $recurseOption = $recursePrompt -ne "no"
 Write-Host ""
@@ -312,7 +311,7 @@ Check-FilePaths -dir $directoryToUse
 Draw-Separator # End every region in this section with a Draw-Separator so everything looks nice.
 #endregion
 
-#region USER INPUT SUBREGION - ISO-8859-1 VERIFICATION
+#region USER INPUT ISO-8859-1 Verification
 Write-Host "To ensure compatibility with all versions of StepMania/ITG, you can check for characters which may not be rendered correctly."
 Write-Host ""
 $encoding = [System.Text.Encoding]::GetEncoding('iso-8859-1')
@@ -342,7 +341,7 @@ if ($unicodeCheckInput -eq 'yes') {
 Draw-Separator
 #endregion
 
-#region USER INPUT SUBREGION - CAPITALIZATION
+#region USER INPUT Capitalization
 $wannaCapitalize = Read-Host -Prompt 'Would you like to standardize capitalization? (yes/no, default is no)'
 Write-Host "Note: This function may break Unicode-only characters."
 if ($wannaCapitalize -eq 'yes') {
@@ -355,12 +354,12 @@ if ($wannaCapitalize -eq 'yes') {
 Draw-Separator
 #endregion
 
-#region USER INPUT SUBREGION - OFFSET ADJUSTMENT
+#region USER INPUT Offset Adjustment
 Update-Offset -dir $directoryToUse -rec $recurse
 Draw-Separator
 #endregion
 
-#region USER INPUT SUBREGION - CHANGE FILENAME/STEP ARTIST VALUES
+#region USER INPUT Adjust Values In Simfile
 $operations = @()
 
 $wannaMessage = @"
@@ -416,6 +415,7 @@ if ($wannaModify -eq 'yes') {
   }
 
   $files = Get-Files -dir $directoryToUse -Recurse $recurse
+  Write-Host ""
   $confirmation = Read-Host "Are you sure you want to apply changes? (yes/no, default is no)"
   Write-Host ""
   if ($confirmation -eq "yes") {
@@ -431,7 +431,7 @@ if ($wannaModify -eq 'yes') {
 Draw-Separator
 #endregion
 
-#region USER INPUT SUBREGION - FILE OPERATIONS
+#region USER INPUT Remove .old Files
 $oldFilesConfirm = Read-Host -Prompt 'Would you like to check for .old files and remove them if found? (yes/no, default is no)'
 if ($oldFilesConfirm -eq 'yes') {
   Remove-OldFiles -targetDir $directoryToUse -Recurse $recurse
@@ -442,7 +442,7 @@ if ($oldFilesConfirm -eq 'yes') {
 Draw-Separator
 #endregion
 
-#region USER INPUT SUBREGION - PREPARE FILENAMES FOR FILESHARING
+#region USER INPUT Portable Filenames
 $renameFilesForSharingMessage = @"
   If you upload files to a sharing     
   service, it might change the file    
@@ -458,7 +458,7 @@ $renameFilesForSharingMessage = @"
 Write-Host $renameFilesForSharingMessage
 $renameFilesForSharingConfirm = Read-Host -Prompt 'Would you like to check for spaces and special characters and rename the files? (yes/no, default is no)'
 if ($renameFilesForSharingConfirm -eq 'yes') {
-  Prepare-For-Filesharing -dir $directoryToUse -rec $recurse
+  Prepare-Filenames-For-Filesharing -dir $directoryToUse -rec $recurse
 } else {
   Write-Host ""
 }
